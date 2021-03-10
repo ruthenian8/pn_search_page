@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Текстовый поиск</title>
+
+    <!-- import the webpage's stylesheet -->
+    <style>
+      @import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap&subset=cyrillic,cyrillic-ext');
+      @import url('https://fonts.googleapis.com/css?family=Roboto+Slab:400,700&display=swap&subset=cyrillic,cyrillic-ext');
+      @import url('https://fonts.googleapis.com/css?family=Playfair+Display:700|Roboto+Mono:400,700&subset=cyrillic,cyrillic-ext');
+      :root {
+        box-sizing: border-box;
+      }
+      @media only screen and (max-width: 600px) {
+        :root {
+            font-size: 16px;
+        }
+        /* layout */
+        #frmcntnr {
+        	width: 100%;
+        }
+
+        /* style */
+        #txt {
+        	width: 70%;
+        }
+
+        h1 {
+        	font-size: 1.5rem;
+        }
+      }
+      @media only screen and (min-width: 601px and max-width: 850px) {
+        :root {
+            font-size: 14px;
+        }
+
+        .object {
+        	flex: 50vw;
+        }
+      }
+
+      /* begin ПРАВИЛА ДЛЯ ФОРМ */
+      #txt, .select {
+/*        appearance: none !important;
+        -moz-appearance: none !important;
+        -webkit-appearance: none !important;*/
+        background-color:white !important;
+        border-radius: 2px;
+        height: 1.6rem !important;
+        font-size: 1rem;
+        padding: 0;
+        padding-left: 3px;
+        font-family: 'Roboto',sans-serif !important;
+      }
+
+      #txt:focus, #txt:active, .select:focus, .select:active {
+        outline-width: 2px;
+        outline-color: #005E7C;
+      }
+
+      /* end ПРАВИЛА ДЛЯ ФОРМ */
+
+      body {
+        font-family: "Roboto", sans-serif;
+        color: white;
+        background-color:#005E7C;
+        margin: 0;
+      }
+
+      #txt, .select {
+          font-size: 1rem;
+          height: 1.2rem;
+      }
+
+      #frmcntnr {
+        font-family: 'Roboto Slab',monospace;
+        margin: 0;
+        color: #000000;
+        background-color:#FFFFFF;
+      }
+
+      #clpbtn {
+        position: relative;
+        padding: 10px;
+        padding-bottom: 1.2rem;
+        font-size: 1.2rem;
+      }
+
+      #clp {
+        color: #005E7C;
+      }
+      .hamburger {
+        background-color: #005E7C;
+        height: 2px;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        width: 1.2rem;
+        display:block;
+      }
+
+
+      h1 {
+        margin:0;
+        padding: 10px;
+        color: #000000;
+        font-family: 'Roboto Mono',monospace;
+      }
+
+      #textform {
+        padding: 10px;
+        font-size:1.2rem;
+      }
+
+      #txt {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border-width: 1.2px;
+        border-color: grey;
+      }  
+
+      /* контейнер для слов */
+      #wordspace{
+        margin-top:10px;
+        padding-bottom: 3rem;
+        position: relative;
+      }
+
+      /* вокруг слова ищем */
+      #initial {
+        padding-top: 5px;
+        margin-bottom: 1rem;
+      }
+      #ref:focus::after, #ref:active::after {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        width: 80%;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        content: "- Добавляйте введённые слова в пул поиска, нажимая на '+'' : 'бродячий', 'собака'. \A\A- Чтобы удалить слово из пула, нажмите на него или на кнопку 'сброс'. \A\A- Что можно искать: существительные, прилагательные, числа, глаголы прошедшего времени: 'маньяк', 'черный', '1980', 'убил'. \A\A- Для большинства слов, кроме глаголов, принимается ввод в начальной форме. \A\A- Исключение: для поиска падежных форм у слов с беглой гласной введите форму род. падежа: 'угля', 'льва'. \A\A- Имена и фамилии рекомендуется вводить с большой буквы.";
+        display: block;
+        background-color: #aacbda;
+        text-align: left;
+        padding: 1.2rem;
+        z-index: 1000;
+      }
+
+      /* место для регулировки */
+      #newwords {
+      	margin-top: 1rem;
+        width:80%;
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        align-items: flex-start;
+        text-align: center;
+        justify-content: space-between;
+      }
+      #newwords > p {
+        align-self:flex-start;
+        flex: 10vw;
+        margin: 3px;
+        background-color:#aacbda;
+        border-radius:2px;
+        border: 1px grey;
+        padding: 5px;
+      }
+      /*ширины слов поиска */
+
+      #srcDiv {
+        position:absolute;
+        bottom:0px;
+        right: 0px;
+      }
+      #search {
+        padding-right: 6px;
+        padding-left: 6px;
+        margin-left:3px;        
+      }
+      
+      #clearWrd {
+        padding-right: 6px;
+        padding-left: 6px;
+      }
+      /* здесь заканчивается дофильтровая часть */
+
+      /* фильтр */
+
+      #query {
+        padding: 10px;
+        padding-bottom: 4rem;
+        position: relative;
+      }
+      #fltrDiv {
+        position: absolute;
+        right: 10px;
+        bottom:1rem;
+      }
+      #filterBtn {
+        padding-right: 6px;
+        padding-left: 6px;
+        margin-left:3px; 
+      }
+      #clearFltr {
+        padding-right: 6px;
+        padding-left: 6px;
+      }
+
+      /* место для регулировки */
+      #formlabels {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        text-align: center
+      }
+      #formlabels > label {
+        flex: 46vw;
+        margin: 3px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+      }
+      .select {
+/*         appearance: none; */
+        margin-top: 0.6rem;
+        width: 70%;
+      }
+      /* ширины форм */
+
+      /* change buttons */
+      #field {
+        position: relative;
+        text-align: center;
+      }
+
+      #backward {
+        width: 5vw;
+        position: absolute;
+        left:0;
+        height: 100%;
+
+        cursor: pointer;
+        padding-top:1vh;
+        font-size: 1.5rem;
+        color: white;
+        background-color: rgba(135,206,235, 0.05);
+      }
+      #forward {
+        width: 5vw;
+        position: absolute;
+        right: 0;
+        height: 100%;
+
+        cursor: pointer;
+        padding-top:1vh;
+        font-size: 1.5rem;
+        color: white;
+        background-color: rgba(135,206,235, 0.05);
+      }
+
+      @media only screen and (min-width: 601px) {
+        #forward span {
+          transform: rotate(90deg);
+          -webkit-transform: rotate(90deg);
+          -moz-transform: rotate(90deg);
+          -ms-transform: rotate(90deg);
+          -o-transform: rotate(90deg);
+          font-size: 16px;
+          display: block;
+        }
+        #backward span {
+          transform: rotate(-90deg);
+          -webkit-transform: rotate(-90deg);
+          -moz-transform: rotate(-90deg);
+          -ms-transform: rotate(-90deg);
+          -o-transform: rotate(-90deg);
+          font-size: 16px;
+          display: block;
+        }
+
+        #forward::before {
+          content: ">";
+          display: block;
+          margin-bottom: 22px;
+          font-size: 1.6rem;
+          font-weight: bold;
+        }
+        #backward::before {
+          content: "<";
+          display: block;
+          margin-bottom: 28px;
+          font-size: 1.6rem;
+          font-weight: bold;
+        }
+      }
+
+      #forward2, #backward2 {
+      	display: none;
+      	margin-top: 2rem;
+      }
+      
+      #forward:hover, #backward:hover {
+        background-color: rgba(135,206,235, 0.15);
+      }
+
+      @media only screen and (max-width: 600px) {
+      	#field {
+      		padding-top: 1rem;
+      	}
+        #forward, #backward, #backward2, #forward2 {
+        	width: 40vw;
+        	margin-bottom: 1rem;
+          position: static;
+          display: inline-block;
+
+          font-size: 1rem;
+          font-weight: bolder;
+
+          padding-top: 0.4rem;
+          padding-bottom: 0.4rem;
+
+        	border-radius: 2px;
+          color: black;
+          background-color: white;
+        }
+        #forward:hover, #forward2:hover, #backward:hover, #backward2:hover {
+          background-color: #aacbda;
+        }
+        #forward:focus, #forward2:focus, #backward:focus, #backward2:focus {
+          outline-color:deepskyblue;
+        }        
+      }
+      /* /change buttons */
+
+      /* Основной раздел */
+      #main {
+        margin: 6%;
+        margin-top:0;
+        margin-bottom: 1rem;
+        text-align:center;
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction:row;
+        justify-content: space-between;
+      }
+
+      /* BEGIN #main > div */
+      .object {
+        text-align:center;
+        flex: 45%;  
+
+        padding:10px;
+        margin: 6px;
+
+        box-shadow:4px 4px rgba(0,0,0,0.5);
+        background-color: white;
+        color: black;
+      }
+      
+      #main > div::-webkit-scrollbar {
+        appearance: none;
+        width: 8px;
+      }
+      #main > div::-webkit-scrollbar-thumb {
+        background-color:#aacbda;
+        border-radius: 2px;
+      }
+      .name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding-bottom: 0;
+        margin-bottom: 0;
+      }
+
+      .additional {
+        margin-top:0.5rem;
+        font-size: 0.9rem;
+        color: grey;
+      }
+
+      b {
+        font-weight: bold;
+        color: white;
+        padding-left: 2px;
+        padding-right: 2px;
+        background-color:#005E7C;
+      } 
+
+      strong {
+        font-weight: bold;
+        padding-left: 2px;
+        padding-right: 2px;
+        background-color:#aacbda;
+      }
+      /* END #main > div */
+
+      #main > p {
+        display: block;
+        position: static;
+        flex: 80%;
+      }
+
+      /* for all buttons */
+      button {
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        font-family: 'Roboto Slab',monospace;
+        font-size: 1rem;
+        border-radius: 2px;
+        border-width: 1.2px;
+        height: 1.8rem !important;
+
+        border-color: grey;
+        background-color: white;
+      }
+      button:focus, button:active {
+        outline-width: 2px;
+        outline-color: #005E7C;
+      }
+
+    </style>
+
+    
+  </head>
+  <body>
+    
+    <div id="frmcntnr">
+      <h1>ПОИСК&nbsp;ПО БАЗЕ&nbsp;ДАННЫХ</h1>
+      <form id="textform">
+        <label for="txt">Искать&nbsp;слово/дату:&nbsp;</label>
+        <input id="txt" placeholder="Ленин / 1980">
+        <button id="plusbtn">+</button>
+        <div id="wordspace">
+          <span id="initial"><button id="ref" title="Справка">Справка
+          </button></span>
+          <div id="newwords">
+            
+          </div>
+          <div id="srcDiv">
+            <button id="clearWrd" label="Сброс" type="reset">Сброс</button>
+            <button id="search" label="Поиск" type="submit">Поиск</button>
+          </div>
+        </div>         
+      </form>
+     
+      <hr />
+      <div id="clpbtn" label="Опции поиска">
+        <label for="clpbtn">Фильтры</label>
+        <!-- &#9651; -->
+        <button id="clp" style="float:right;">
+          <span class="hamburger"></span>
+          <span class="hamburger"></span>
+          <span class="hamburger"></span>
+        </button>
+      </div>
+      
+      <div id="query" style="">
+        <form class="layout" id="formElem">
+            <div class="row column" id="formlabels">
+              <label>Статус объекта
+                <br><select class="select" name="status" id="selectStatus">
+                  <option value="">Не выбрано</option> 
+                  <option value="существующий">существующий</option>
+                  <option value="несуществующий">несуществующий</option>
+                </select>
+              </label>
+              <label>Тип объекта
+                <br><select class="select" name="type" id="selectType">
+                  <option value="">Не выбрано</option>
+                </select>
+                </label>
+              <label>Город
+                <br><select class="select" name="city" id="selectCity">
+                  <option value="">Не выбрано</option>
+                </select>
+              </label>
+              <label>Район
+                <br><select class="select" name="rayon" id="selectRayon">
+                  <option value="">Не выбрано</option>
+                </select>
+              </label>
+              <label>Тип сюжета
+                <br><select class="select" name="narrativ_t" id="selectNarrativT">
+                  <option value="">Не выбрано</option>
+                </select>
+              </label>
+              <label>Дополнительно
+                <br><select class="select" name="mos" id="selectAdd">
+                  <option value="">Не выбрано</option>
+                  <option value="mos1">Дворовые практики</option>
+                  <option value="mos2">Религиозные практики</option>
+                  <option value="mos3">Бездомные</option>
+                  <option value="mos4">Подземелья</option>
+                  <option value="mos5">Субкультуры</option>
+                  <option value="mos6">Легенды</option>
+                </select>
+              </label>
+            </div>
+          <div id="fltrDiv">
+            <button id="clearFltr" type="reset">Сброс</button>
+            <button id="filterBtn" type="submit">Применить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div id="field">
+      <!-- &#60; &#62; -->
+      <div id="backward" class="switch sidebar" role="button"><span>Назад</span></div>
+      <div id="forward" class="switch sidebar" role="button"><span>Вперед</span></div>
+      
+      <div id="main">
+        <p style="font-size: 1.1rem; display: block; margin: 1rem;">Пожалуйста, подождите:<br />Идёт загрузка...</p>        
+      </div>
+      <div id="backward2" class="switch" role="button"><span>Назад</span></div>
+      <div id="forward2" class="switch" role="button"><span>Вперед</span></div>
+    </div>
+    
+
+    <script type="text/javascript">
+      let quer = document.getElementById("query");
+      let clp = document.getElementById("clp");
+
+      if ( window.screen.width >= 750 ) {
+        quer.style.setProperty("display", "block")
+        quer.setAttribute("aria-expanded", "true");      
+
+      } else {
+        quer.style.setProperty("display", "none")
+        quer.setAttribute("aria-expanded", "false");       
+      }
+    </script>
+    
+    <script src="search_test.js" defer></script>    
+  </body>
+</html>
